@@ -1,19 +1,22 @@
 package models;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import javax.persistence.*;
+import java.util.List;
+
 @Entity
 @Table(name = "studio")
 public class Studio {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "studio_id")
     private long id;
     @Column(name = "name")
     private String name;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "studio")
+    @JsonIgnore
+    private List<Anime> animes;
 
     public Studio(){}
 
@@ -31,5 +34,9 @@ public class Studio {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public List<Anime> getAnimes() {
+        return animes;
     }
 }

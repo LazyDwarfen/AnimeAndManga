@@ -1,16 +1,15 @@
 package models;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import javax.persistence.*;
+import java.util.List;
+
 @Entity
 @Table(name = "manga")
 public class Manga {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "manga_id")
     private long id;
     @Column(name = "name")
     private String name;
@@ -20,6 +19,10 @@ public class Manga {
     private String author;
     @Column (name = "pic_url")
     private String picURL;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "manga")
+    @JsonIgnore
+    private List<Anime> animes;
 
     public Manga() {
     }
@@ -65,4 +68,9 @@ public class Manga {
     public void setPicURL(String picURL) {
         this.picURL = picURL;
     }
+
+    public List<Anime> getAnimes() {
+        return animes;
+    }
+
 }

@@ -1,16 +1,12 @@
 package models;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
+
 @Entity
 @Table(name = "anime")
 public class Anime {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "anime_id")
     private long id;
     @Column(name = "name")
     private String name;
@@ -20,6 +16,12 @@ public class Anime {
     private boolean ongoing;
     @Column (name = "pic_url")
     private String picURL;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manga_id")
+    private Manga manga;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "studio_id")
+    private Studio studio;
 
     public Anime() {
     }
@@ -66,4 +68,19 @@ public class Anime {
         this.picURL = picURL;
     }
 
+    public Manga getManga() {
+        return manga;
+    }
+
+    public void setManga(Manga manga) {
+        this.manga = manga;
+    }
+
+    public Studio getStudio() {
+        return studio;
+    }
+
+    public void setStudio(Studio studio) {
+        this.studio = studio;
+    }
 }
