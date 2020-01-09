@@ -6,6 +6,9 @@ import models.Anime;
 import models.Manga;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import services.Hibernate;
 
 import javax.ejb.Stateless;
@@ -16,8 +19,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-@Stateless
-public class MangaController extends HttpServlet {
+@Controller
+public class MangaController {
 
     private final String actionParam = "action";
     private final String create = "create";
@@ -43,7 +46,6 @@ public class MangaController extends HttpServlet {
     }
 
 
-    @Override
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) {
         setAccessControlHeaders(resp);
         resp.setStatus(HttpServletResponse.SC_OK);
@@ -54,7 +56,7 @@ public class MangaController extends HttpServlet {
         resp.setHeader("Access-Control-Allow-Methods", "GET");
     }
 
-    @Override
+    @RequestMapping(value = "/Manga", method = RequestMethod.GET)
     protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws IOException {
         PrintWriter out = resp.getWriter();
         setAccessControlHeaders(resp);
@@ -107,7 +109,7 @@ public class MangaController extends HttpServlet {
         }
     }
 
-    @Override
+    @RequestMapping(value = "/Manga", method = RequestMethod.POST)
     protected void doPost(final HttpServletRequest req, final HttpServletResponse resp) {
         try (Session session = Hibernate.getSessionFactory().openSession()) {
             setAccessControlHeaders(resp);

@@ -5,6 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import models.Studio;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import services.Hibernate;
 
 import javax.ejb.Stateless;
@@ -15,8 +19,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-@Stateless
-public class StudioController extends HttpServlet {
+@Controller
+public class StudioController {
     private final String actionParam = "action";
     private final String create = "create";
     private final String update = "update";
@@ -39,7 +43,6 @@ public class StudioController extends HttpServlet {
         return result;
     }
 
-    @Override
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) {
         setAccessControlHeaders(resp);
         resp.setStatus(HttpServletResponse.SC_OK);
@@ -50,8 +53,8 @@ public class StudioController extends HttpServlet {
         resp.setHeader("Access-Control-Allow-Methods", "GET");
     }
 
-    @Override
-    protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws IOException {
+    @RequestMapping(value = "/Studio",method = RequestMethod.GET)
+    public void doGet(HttpServletRequest req, final HttpServletResponse resp) throws IOException {
         PrintWriter out = resp.getWriter();
         setAccessControlHeaders(resp);
         final ObjectMapper mappper = new ObjectMapper();
@@ -62,6 +65,7 @@ public class StudioController extends HttpServlet {
                 case "all": {
                     List<Studio> studios = session.createQuery("from "+tabName, Studio.class).list();
                     try {
+
                         out.println(mappper.writeValueAsString(studios));
                     }
                     catch (JsonProcessingException e) {
@@ -100,8 +104,8 @@ public class StudioController extends HttpServlet {
         }
     }
 
-    @Override
-    protected void doPost(final HttpServletRequest req, final HttpServletResponse resp) {
+    @RequestMapping(value = "/Studio",method = RequestMethod.POST)
+    public void doPost(HttpServletRequest req, final HttpServletResponse resp) {
         setAccessControlHeaders(resp);
         try (Session session = Hibernate.getSessionFactory().openSession()) {
             {

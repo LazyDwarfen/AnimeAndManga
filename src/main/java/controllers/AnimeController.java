@@ -6,6 +6,11 @@ import models.Anime;
 import models.Anime;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import services.Hibernate;
 
 import javax.servlet.ServletException;
@@ -17,8 +22,8 @@ import java.io.PrintWriter;
 import java.util.List;
 import javax.ejb.Stateless;
 
-@Stateless
-public class AnimeController extends HttpServlet {
+@Controller
+public class AnimeController {
     private final String actionParam = "action";
     private final String create = "create";
     private final String update = "update";
@@ -41,7 +46,6 @@ public class AnimeController extends HttpServlet {
         return result;
     }
 
-    @Override
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) {
         setAccessControlHeaders(resp);
         resp.setStatus(HttpServletResponse.SC_OK);
@@ -52,7 +56,7 @@ public class AnimeController extends HttpServlet {
         resp.setHeader("Access-Control-Allow-Methods", "GET");
     }
 
-    @Override
+    @RequestMapping(value = "/Anime", method = RequestMethod.GET)
     protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws IOException {
         PrintWriter out = resp.getWriter();
         final ObjectMapper mappper = new ObjectMapper();
@@ -102,7 +106,7 @@ public class AnimeController extends HttpServlet {
         }
     }
 
-    @Override
+    @RequestMapping(value = "/Anime", method = RequestMethod.POST)
     protected void doPost(final HttpServletRequest req, final HttpServletResponse resp) {
         String status = okStatus;
         setAccessControlHeaders(resp);
