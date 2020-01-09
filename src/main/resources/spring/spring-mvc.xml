@@ -13,8 +13,21 @@
 
     <!-- Provide support for component scanning -->
     <context:component-scan base-package="controllers" />
+    <context:component-scan base-package="config" />
+
+    <bean
+            class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix">
+            <value>/WEB-INF/pages/</value>
+        </property>
+        <property name="suffix">
+            <value>.jsp</value>
+        </property>
+    </bean>
+    <mvc:resources mapping="/resources/**" location="/resources/"/>
 
     <!--Provide support for conversion, formatting and validation -->
     <mvc:annotation-driven/>
+
 
 </beans>
