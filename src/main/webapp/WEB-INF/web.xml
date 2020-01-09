@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0">
+    <display-name>CrunchifyJSPServletExample</display-name>
+
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+        <welcome-file>index.jsp</welcome-file>
+
+    </welcome-file-list>
+
+    <servlet>
+        <servlet-name>Manga</servlet-name>
+        <servlet-class>controllers.MangaController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>Anime</servlet-name>
+        <servlet-class>controllers.AnimeController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>Studio</servlet-name>
+        <servlet-class>controllers.StudioController</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>Manga</servlet-name>
+        <url-pattern>/Manga</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Anime</servlet-name>
+        <url-pattern>/Anime</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Studio</servlet-name>
+        <url-pattern>/Studio</url-pattern>
+    </servlet-mapping>
+</web-app>

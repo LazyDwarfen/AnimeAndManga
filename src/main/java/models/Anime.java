@@ -16,10 +16,10 @@ public class Anime {
     private boolean ongoing;
     @Column (name = "pic_url")
     private String picURL;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manga_id")
     private Manga manga;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "studio_id")
     private Studio studio;
 
