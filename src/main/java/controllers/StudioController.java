@@ -55,18 +55,13 @@ public class StudioController extends HttpServlet {
         PrintWriter out = resp.getWriter();
         setAccessControlHeaders(resp);
         final ObjectMapper mappper = new ObjectMapper();
+        List<Studio> data = null;
         try (Session session = Hibernate.getSessionFactory().openSession()) {
             Transaction transaction;
             status = okStatus;
             switch (validGetParameter(req, actionParam)) {
                 case "all": {
-                    List<Studio> studios = session.createQuery("from "+tabName, Studio.class).list();
-                    try {
-                        out.println(mappper.writeValueAsString(studios));
-                    }
-                    catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                    }
+                    data = session.createQuery("from "+tabName, Studio.class).list();
                     break;
                 }
                 case "byID":{
@@ -79,12 +74,7 @@ public class StudioController extends HttpServlet {
                             .setParameter(tabId, id)
                             .list();
                     transaction = session.beginTransaction();
-                    try {
-                        out.println(mappper.writeValueAsString(studios));
-                    }
-                    catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                    }
+                    data = studios;
                     transaction.commit();
                     status = okStatus;
                     break;
@@ -96,70 +86,91 @@ public class StudioController extends HttpServlet {
         } catch (Exception e){
             e.printStackTrace();
         } finally {
-            req.setAttribute(result, status);
+            if(data != null){
+                out.println("{\"status\":\""+status+"\", \"data\":"+ mappper.writeValueAsString(data) +"}");
+            }
+            else
+                out.println("{\"status\":\""+status+"\"}");
         }
     }
 
     @Override
-    protected void doPost(final HttpServletRequest req, final HttpServletResponse resp) {
-        setAccessControlHeaders(resp);
+    protected void doPost(final HttpServletRequest req, final HttpServletResponse resp) throws IOException {
         try (Session session = Hibernate.getSessionFactory().openSession()) {
-            {
-                Transaction transaction;
-                if (req.getParameter("action") != null) {
-                    String action = req.getParameter("action");
-                    switch (action) {
-                        case "create": {
-                            if (req.getParameter("name") != null) {
-                                String name = req.getParameter("name");
-                                transaction = session.beginTransaction();
-                                session.save(new Studio(name));
-                                transaction.commit();
-                                req.setAttribute("result", "OK");
-                            } else
-                                req.setAttribute("result", "error");
-                            break;
-                        }
-                        case "delete": {
-                            if (req.getParameter("id") != null) {
-                                long id = Long.parseLong(req.getParameter("id"));
-                                List<Studio> studios = session
-                                        .createQuery("from Studio where id=:studio_id", Studio.class)
-                                        .setParameter("studio_id", id)
-                                        .list();
-                                transaction = session.beginTransaction();
-                                studios.forEach(session::delete);
-                                transaction.commit();
-                                req.setAttribute("result", "OK");
-                            } else
-                                req.setAttribute("result", "error");
-                            break;
-                        }
-                        case "update": {
-                            if (req.getParameter("id") != null &&
-                                    req.getParameter("name") != null) {
-                                long id = Long.parseLong(req.getParameter("id"));
-                                String name = req.getParameter("name");
-                                List<Studio> studios = session
-                                        .createQuery("from Studio where id=:studio_id", Studio.class)
-                                        .setParameter("studio_id", id)
-                                        .list();
-                                transaction = session.beginTransaction();
-                                studios.forEach(elem -> {
-                                    elem.setName(name);
-                                    session.update(elem);
-                                });
-                                transaction.commit();
-                                req.setAttribute("result", "OK");
-                            } else
-                                req.setAttribute("result", "error");
-                            break;
-                        }
+            setAccessControlHeaders(resp);
+            Transaction transaction;
+            final ObjectMapper mappper = new ObjectMapper();
+            Studio model = null;
+            try {
+                model = mappper.readValue(req.getInputStream(),Studio.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            switch (validGetParameter(req, actionParam)) {
+                case create: {
+                    try {
+                        transaction = session.beginTransaction();
+                        session.save(model);
+                        transaction.commit();
+                    } catch (NullPointerException e){
+                        e.printStackTrace();
+                        status = errorStatus;
                     }
+                    break;
+                }
+
+                case delete: {
+                    try{
+                        long id = model.getId();
+                        String query = String.format("from %s where id=:%s",
+                                tabName,  tabId);
+
+                        List<Studio> studio = session
+                                .createQuery(query, Studio.class)
+                                .setParameter("studio_id", id)
+                                .list();
+                        transaction = session.beginTransaction();
+                        studio.forEach(session::delete);
+                        transaction.commit();
+                        status = okStatus;
+                    } catch (NullPointerException e){
+                        e.printStackTrace();
+                        status = errorStatus;
+                    } finally {
+                        req.setAttribute(result, status);
+                    }
+                    break;
+                }
+                case update: {
+
+                    try{
+                        long id = model.getId();
+                        String query = String.format("from %s where id=:%s",
+                                tabName, tabId);
+                        List<Studio> mangas = session
+                                .createQuery(query, Studio.class)
+                                .setParameter(tabId, id)
+                                .list();
+                        transaction = session.beginTransaction();
+                        Studio finalModel = model;
+                        mangas.forEach(elem -> {
+                            elem.setName(finalModel.getName());
+                            session.update(elem);
+                        });
+                        transaction.commit();
+                    }catch (NullPointerException e){
+                        e.printStackTrace();
+                        status = errorStatus;
+                    } finally {
+                        req.setAttribute(result,status);
+                    }
+                    break;
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            resp.getWriter().write("{\"status\":\""+status+"\"}");
         }
     }
 }
