@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import services.Hibernate;
 
 import javax.ejb.Stateless;
+import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -46,33 +47,22 @@ public class MangaController {
     }
 
 
-    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) {
-        setAccessControlHeaders(resp);
-        resp.setStatus(HttpServletResponse.SC_OK);
-    }
-
     private void setAccessControlHeaders(HttpServletResponse resp) {
         resp.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
         resp.setHeader("Access-Control-Allow-Methods", "GET");
     }
-
     @RequestMapping(value = "/Manga", method = RequestMethod.GET)
     protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws IOException {
         PrintWriter out = resp.getWriter();
         setAccessControlHeaders(resp);
         final ObjectMapper mappper = new ObjectMapper();
+        List<Manga> data = null;
         try (Session session = Hibernate.getSessionFactory().openSession()) {
             Transaction transaction;
             status = okStatus;
             switch (validGetParameter(req, actionParam)) {
                 case "all": {
-                    List< Manga > mangas = session.createQuery("from "+tabName, Manga.class).list();
-                    try {
-                        out.println(mappper.writeValueAsString(mangas));
-                    }
-                    catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                    }
+                    data = session.createQuery("from "+tabName, Manga.class).list();
                     break;
                 }
                 case "byID":{
@@ -80,20 +70,11 @@ public class MangaController {
                     String query = String.format("from %s where id=:%s",
                             tabName,  tabId);
 
-                    List<Manga> mangas = session
+                    data = session
                             .createQuery(query, Manga.class)
                             .setParameter(tabId, id)
                             .list();
                     transaction = session.beginTransaction();
-                    mangas.forEach(elem -> {
-                        try {
-                            out.println(
-                                    mappper.writeValueAsString(elem)
-                            );
-                        } catch (JsonProcessingException e) {
-                            e.printStackTrace();
-                        }
-                    });
                     transaction.commit();
                     status = okStatus;
                     break;
@@ -105,24 +86,31 @@ public class MangaController {
         } catch (Exception e){
             e.printStackTrace();
         } finally {
-            req.setAttribute(result, status);
+            if(data != null){
+                out.println("{\"status\":\""+status+"\", \"data\":"+ mappper.writeValueAsString(data) +"}");
+            }
+            else
+                out.println("{\"status\":\""+status+"\"}");
         }
     }
 
     @RequestMapping(value = "/Manga", method = RequestMethod.POST)
-    protected void doPost(final HttpServletRequest req, final HttpServletResponse resp) {
+    protected void doPost(final HttpServletRequest req, final HttpServletResponse resp) throws IOException {
         try (Session session = Hibernate.getSessionFactory().openSession()) {
             setAccessControlHeaders(resp);
             Transaction transaction;
+            final ObjectMapper mappper = new ObjectMapper();
+            Manga model = null;
+            try {
+                model = mappper.readValue(req.getInputStream(),Manga.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             switch (validGetParameter(req, actionParam)) {
                 case create: {
                     try {
-                        String name = validGetParameter(req,"name");
-                        String genre = validGetParameter(req,"genre");
-                        String author = validGetParameter(req, "author");
-                        String picURL = validGetParameter(req,"picURL");
                         transaction = session.beginTransaction();
-                        session.save(new Manga(name, genre, author, picURL));
+                        session.save(model);
                         transaction.commit();
                         status = okStatus;
                     } catch (NullPointerException e){
@@ -136,43 +124,44 @@ public class MangaController {
 
                 case delete: {
                     try{
-                        long id = Long.parseLong(validGetParameter(req, "id"));
+                        long id = model.getId();
                         String query = String.format("from %s where id=:%s",
                                 tabName,  tabId);
 
-                        List<Manga> animes = session
+                        List<Manga> mangas = session
                                 .createQuery(query, Manga.class)
-                                .setParameter("anime_id", id)
+                                .setParameter("manga_id", id)
                                 .list();
                         transaction = session.beginTransaction();
-                        animes.forEach(session::delete);
+                        mangas.forEach(session::delete);
                         transaction.commit();
                         status = okStatus;
                     } catch (NullPointerException e){
                         e.printStackTrace();
                         status = errorStatus;
-                    } finally {
-                        req.setAttribute(result, status);
+                    }catch (PersistenceException e){
+                        status = "Error: object is linked to other object";
                     }
                     break;
                 }
                 case update: {
 
                     try{
-                        long id = Long.parseLong(validGetParameter(req, "id"));
-                        String name = validGetParameter(req, "name");
-
-
+                        long id = model.getId();
                         String query = String.format("from %s where id=:%s",
                                 tabName, tabId);
 
-                        List<Anime> studios = session
-                                .createQuery(query, Anime.class)
+                        List<Manga> mangas = session
+                                .createQuery(query, Manga.class)
                                 .setParameter(tabId, id)
                                 .list();
                         transaction = session.beginTransaction();
-                        studios.forEach(elem -> {
-                            elem.setName(name);
+                        Manga finalModel = model;
+                        mangas.forEach(elem -> {
+                            elem.setName(finalModel.getName());
+                            elem.setAuthor(finalModel.getAuthor());
+                            elem.setGenre(finalModel.getGenre());
+                            elem.setPicURL(finalModel.getPicURL());
                             session.update(elem);
                         });
                         transaction.commit();
@@ -187,7 +176,8 @@ public class MangaController {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            resp.getWriter().write("{\"status\":\""+status+"\"}");
         }
     }
 }
-

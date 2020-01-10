@@ -6,18 +6,20 @@ import models.Anime;
 import models.Anime;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import services.Hibernate;
+import org.hibernate.Transaction;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-import services.Hibernate;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -46,14 +48,9 @@ public class AnimeController {
         return result;
     }
 
-    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) {
-        setAccessControlHeaders(resp);
-        resp.setStatus(HttpServletResponse.SC_OK);
-    }
-
     private void setAccessControlHeaders(HttpServletResponse resp) {
         resp.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
-        resp.setHeader("Access-Control-Allow-Methods", "GET");
+        resp.setHeader("Access-Control-Allow-Methods", "GET, POST");
     }
 
     @RequestMapping(value = "/Anime", method = RequestMethod.GET)
@@ -61,18 +58,13 @@ public class AnimeController {
         PrintWriter out = resp.getWriter();
         final ObjectMapper mappper = new ObjectMapper();
         setAccessControlHeaders(resp);
+        List<Anime> data = null;
         try (Session session = Hibernate.getSessionFactory().openSession()) {
             Transaction transaction;
             status = okStatus;
             switch (validGetParameter(req, actionParam)) {
                 case "all": {
-                    List<Anime> animes = session.createQuery("from " + tabName, Anime.class).list();
-                   try {
-                       out.println(mappper.writeValueAsString(animes));
-                   }
-                   catch (JsonProcessingException e) {
-                            e.printStackTrace();
-                        }
+                    data = session.createQuery("from " + tabName, Anime.class).list();
                     break;
                 }
                 case "byID":{
@@ -80,17 +72,11 @@ public class AnimeController {
                     String query = String.format("from %s where id=:%s",
                             tabName,  tabId);
 
-                    List<Anime> animes = session
+                    data = session
                             .createQuery(query, Anime.class)
                             .setParameter(tabId, id)
                             .list();
                     transaction = session.beginTransaction();
-                    try {
-                        out.println(mappper.writeValueAsString(animes));
-                    }
-                    catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                    }
                     transaction.commit();
                     status = okStatus;
                     break;
@@ -102,31 +88,38 @@ public class AnimeController {
         } catch (Exception e){
             e.printStackTrace();
         } finally {
-            req.setAttribute(result, status);
+            if(data != null){
+                out.println("{\"status\":\""+status+"\", \"data\":"+ mappper.writeValueAsString(data) +"}");
+            }
+            else
+                out.println("{\"status\":\""+status+"\"}");
         }
     }
 
     @RequestMapping(value = "/Anime", method = RequestMethod.POST)
-    protected void doPost(final HttpServletRequest req, final HttpServletResponse resp) {
+    protected void doPost(final HttpServletRequest req, final HttpServletResponse resp) throws IOException {
         String status = okStatus;
+        final ObjectMapper mappper = new ObjectMapper();
+        Anime model = null;
+        try {
+            model = mappper.readValue(req.getInputStream(),Anime.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         setAccessControlHeaders(resp);
         try (Session session = Hibernate.getSessionFactory().openSession()) {
             Transaction transaction;
 
             switch (validGetParameter(req, actionParam)) {
                 case create: {
-                    String name = validGetParameter(req, "name");
-                    String genre = validGetParameter(req, "genre");
-                    String picURL = validGetParameter(req, "picURL");
-                    boolean ongoing = Boolean.parseBoolean(req.getParameter("ongoing"));
-
                     transaction = session.beginTransaction();
-                    session.save(new Anime(name, genre, ongoing, picURL));
+                    session.save(model);
                     transaction.commit();
                     break;
                 }
                 case delete: {
-                    long id = Long.parseLong(validGetParameter(req, "id"));
+                    long id = model.getId();
                     String query = String.format("from %s where id=:%s",
                             tabName, tabId);
 
@@ -136,32 +129,32 @@ public class AnimeController {
                             .list();
                     transaction = session.beginTransaction();
                     animes.forEach(session::delete);
+                    if(animes.size()<1)
+                        status="this object was not found";
                     transaction.commit();
                     break;
                 }
                 case update: {
-                    long id = Long.parseLong(validGetParameter(req, "id"));
-                    String name = validGetParameter(req, "name");
-                    String genre = validGetParameter(req, "genre");
-                    String picURL = validGetParameter(req, "picURL");
-                    long AnimeId = Long.parseLong(validGetParameter(req, "Animeid"));
-                    boolean ongoing = Boolean.parseBoolean(req.getParameter("ongoing"));
+                    long id = model.getId();
 
                     String query = String.format("from %s where id=:%s",
                             tabName, tabId);
 
-                    List<Anime> studios = session
+                    List<Anime> animes = session
                             .createQuery(query, Anime.class)
                             .setParameter(tabId, id)
                             .list();
                     transaction = session.beginTransaction();
-                    studios.forEach(elem -> {
-                        elem.setName(name);
-                        elem.setGenre(genre);
-                        elem.setOngoing(ongoing);
-                        elem.setPicURL(picURL);
+                    Anime finalModel = model;
+                    animes.forEach(elem -> {
+                        elem.setName(finalModel.getName());
+                        elem.setGenre(finalModel.getGenre());
+                        elem.setOngoing(finalModel.isOngoing());
+                        elem.setPicURL(finalModel.getPicURL());
                         session.update(elem);
                     });
+                    if(animes.size()<1)
+                        status="this object was not found";
                     transaction.commit();
                     break;
                 }
@@ -172,8 +165,7 @@ public class AnimeController {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            req.setAttribute(result, status);
+            resp.getWriter().write("{\"status\":\""+status+"\"}");
         }
     }
 }
-
