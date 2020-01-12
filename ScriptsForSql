@@ -1,5 +1,33 @@
 
- CREATE SEQUENCE public.anime_idseq
+--patch 4.0
+
+
+CREATE SEQUENCE public.change_idseq
+    INCREMENT 1
+    START 10
+    MINVALUE 10
+    MAXVALUE 100000000000
+    CACHE 1;
+
+ALTER SEQUENCE public.change_idseq
+    OWNER TO postgres;
+    
+    
+CREATE SEQUENCE public.email_idseq
+    INCREMENT 1
+    START 10
+    MINVALUE 10
+    MAXVALUE 1000000000
+    CACHE 1;
+
+ALTER SEQUENCE public.email_idseq
+    OWNER TO postgres;
+
+--parch 4.0 
+
+
+
+CREATE SEQUENCE public.anime_idseq
      INCREMENT 1
      START 24
      MINVALUE 10
@@ -29,6 +57,8 @@ CREATE SEQUENCE public.studio_idseq
 
 ALTER SEQUENCE public.studio_idseq
     OWNER TO postgres;
+    
+    
 
 
 
@@ -94,21 +124,40 @@ TABLESPACE pg_default;
 ALTER TABLE public.anime
     OWNER to postgres;
 
--- Table: public.changes
+--parch 4.0 
 
--- DROP TABLE public.changes;
 
-CREATE TABLE public.changes
+CREATE TABLE public.email_notification
 (
-    change_id bigint NOT NULL,
+    email_id bigint NOT NULL DEFAULT nextval('email_idseq'::regclass),
+    email character varying(1000) COLLATE pg_catalog."default",
+    action_type character varying(50) COLLATE pg_catalog."default",
+    CONSTRAINT email_notification_pkey PRIMARY KEY (email_id)
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE public.email_notification
+    OWNER to postgres;
+
+    CREATE TABLE public.changes
+(
+    change_id bigint NOT NULL DEFAULT nextval('anime_idseq'::regclass),
     entity character varying(20) COLLATE pg_catalog."default",
     inentity_id bigint,
     change_json character varying(10000) COLLATE pg_catalog."default",
     change_type character varying(50) COLLATE pg_catalog."default",
     CONSTRAINT changes_pkey PRIMARY KEY (change_id)
 )
-
+WITH (
+    OIDS = FALSE
+)
 TABLESPACE pg_default;
 
 ALTER TABLE public.changes
     OWNER to postgres;
+    
+    
+--parch 4.0 
