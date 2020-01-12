@@ -55,14 +55,16 @@ class AnimeBlockComponent extends React.Component {
                 <div className = "Genre" >Genre: {this.props.anime.genre}</div> 
                 <div className = "Ongoing" >Ongoing: {this.props.anime.ongoing ? 'yes' : 'no'}</div> 
                 <div className = "Studio" >Studio: {this.props.anime.studio == null? 'N/A' : this.props.anime.studio.name}</div> 
-                <div className = "Manga" >Manga: {this.props.anime.manga == null? 'N/A' : this.props.anime.manga.name}</div> 
-                <img 
-                    className = "Pic" 
-                    src = {this.props.anime.picURL} 
-                    style = {{maxWidth:'280px',
-                    height: '300px'}}
-                    alt = 'error'
-                ></img> 
+                <div className = "Manga" >Manga: {this.props.anime.manga == null? 'N/A' : this.props.anime.manga.name}</div>
+                <img
+                    className="Pic"
+                    src={this.props.anime.picURL}
+                    style={{
+                        maxWidth: '280px',
+                        height: '300px'
+                    }}
+                    alt='error'
+                />
                 {/* <Button variant="Light" className="edit" onClick={(e)=>{this.updateElement(e, this.props.anime)}}>edit</Button> */}
                 <Button variant="Light" className="delete" onClick={(e)=>{this.deleteElement(e, this.props.anime.id)}}>delete</Button>
             </div>

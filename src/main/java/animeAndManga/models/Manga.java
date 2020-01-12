@@ -1,25 +1,39 @@
-package models;
+package animeAndManga.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
+import javax.xml.bind.annotation.*;
 import java.util.List;
 
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 @Entity
 @Table(name = "manga")
 public class Manga {
+
+    @XmlAttribute
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "manga_id")
-    private long id;
+    private Long id;
+
+    @XmlElement
     @Column(name = "name")
     private String name;
+
+    @XmlElement
     @Column(name = "genre")
     private String genre;
+
+    @XmlElement
     @Column(name = "author")
     private String author;
+
+    @XmlElement
     @Column (name = "pic_url")
     private String picURL;
 
+    @XmlTransient
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "manga")
     @JsonIgnore
     private List<Anime> animes;

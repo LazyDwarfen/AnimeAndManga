@@ -1,23 +1,27 @@
 class AbstractService{
     constructor(urlService) {
         this.urlService = "http://localhost:8080/" + urlService;
-      }
-      
+    }
+
     async create(data){
-        const response = await fetch(`${this.urlService}?action=create`, {
+        data.id = 0;
+        const response = await fetch(`${this.urlService}`, {
             method: 'POST',
             mode: 'cors',
             cache: 'no-cache',
             redirect: 'follow',
+            headers: {
+                'Content-Type': 'application/json'
+            },
             referrer: 'no-referrer',
             body: JSON.stringify(data),
         });
         return await response.json();
     }
-    
+
     async update(data){
-        const response = await fetch(`${this.urlService}?action=update`, {
-            method: 'POST',
+        const response = await fetch(`${this.urlService}`, {
+            method: 'PUT',
             mode: 'cors',
             cache: 'no-cache',
             redirect: 'follow',
@@ -26,10 +30,10 @@ class AbstractService{
         });
         return await response.json();
     }
-    
+
     async delete(data){
-        const response = await fetch(`${this.urlService}?action=delete`, {
-            method: 'POST',
+        const response = await fetch(`${this.urlService}/${data.id}`, {
+            method: 'DELETE',
             mode: 'cors',
             cache: 'no-cache',
             redirect: 'follow',
@@ -38,9 +42,9 @@ class AbstractService{
         });
         return await response.json();
     }
-    
+
     async get(data){
-        const response = await fetch(`${this.urlService}?action=byID`, {
+        const response = await fetch(`${this.urlService}/${data.id}`, {
             method: 'GET',
             mode: 'cors',
             cache: 'no-cache',
@@ -50,9 +54,9 @@ class AbstractService{
         });
         return await response.json();
     }
-    
+
     async getAll(){
-        const response = await fetch(`${this.urlService}?action=all`, {
+        const response = await fetch(`${this.urlService}`, {
             method: 'GET',
             mode: 'cors',
             cache: 'no-cache',
@@ -61,7 +65,7 @@ class AbstractService{
         });
         return await response.json();
     }
-    testMehod(){
+    static testMehod(){
         return "OK";
     }
 }
