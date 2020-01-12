@@ -94,3 +94,21 @@ TABLESPACE pg_default;
 ALTER TABLE public.anime
     OWNER to postgres;
 
+-- Table: public.changes
+
+-- DROP TABLE public.changes;
+
+CREATE TABLE public.changes
+(
+    change_id bigint NOT NULL,
+    entity character varying(20) COLLATE pg_catalog."default",
+    inentity_id bigint,
+    change_json character varying(10000) COLLATE pg_catalog."default",
+    change_type character varying(50) COLLATE pg_catalog."default",
+    CONSTRAINT changes_pkey PRIMARY KEY (change_id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE public.changes
+    OWNER to postgres;
